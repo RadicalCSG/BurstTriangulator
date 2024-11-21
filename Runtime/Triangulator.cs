@@ -1353,7 +1353,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         {
             using var pathHalfedges = new NativeList<int>(allocator);
             using var pathPoints = new NativeList<int>(allocator);
-            using var trianglesQueue = new NativeQueue<int>(allocator);
+            using var trianglesQueue = new NativeList<int>(allocator);
             using var visitedTriangles = new NativeList<bool>(allocator);
 
             new RefineMeshStep.UnsafeBowerWatson
@@ -1371,10 +1371,10 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
         {
             using var pathHalfedges = new NativeList<int>(allocator);
             using var pathPoints = new NativeList<int>(allocator);
-            using var trianglesQueue = new NativeQueue<int>(allocator);
+            using var trianglesQueue = new NativeList<int>(allocator);
             using var visitedTriangles = new NativeList<bool>(allocator);
 
-            var triangles = output.Triangles;
+			var triangles = output.Triangles;
             var halfedges = output.Halfedges;
             var constrainedHalfedges = output.ConstrainedHalfedges;
 
@@ -2528,7 +2528,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
             private NativeList<int> halfedges;
             private NativeList<bool> ignoredHalfedges;
             private NativeArray<bool> visitedTriangles;
-            private NativeQueue<int> trianglesQueue;
+            private NativeList<int> trianglesQueue;
             private NativeArray<T2> holes;
 
             private readonly Args args;
@@ -2663,12 +2663,12 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 }
 
                 visitedTriangles[tId] = true;
-                trianglesQueue.Enqueue(tId);
+				Enqueue(trianglesQueue, tId);
                 tIdMinVisited = tIdMinVisited == -1 ? tId : math.min(tId, tIdMinVisited);
 
                 // Search outwards from the seed triangle and mark all triangles
                 // until we get to a constrained edge, or a previously visited triangle.
-                while (trianglesQueue.TryDequeue(out tId))
+                while (TryDequeue(trianglesQueue, out tId))
                 {
                     for (int i = 0; i < 3; i++)
                     {
@@ -2683,7 +2683,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         if (!visitedTriangles[otherId])
                         {
                             visitedTriangles[otherId] = true;
-                            trianglesQueue.Enqueue(otherId);
+							Enqueue(trianglesQueue, otherId);
                             tIdMinVisited = math.min(otherId, tIdMinVisited);
                         }
                     }
@@ -2705,14 +2705,31 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 return -1;
             }
 
-            private void PlantAuto(Allocator allocator)
+			private static void Enqueue<Ti>(NativeList<Ti> collection, Ti item) where Ti : unmanaged
+			{
+                collection.Add(item);
+			}
+
+			private static bool TryDequeue<Ti>(NativeList<Ti> collection, out Ti item) where Ti : unmanaged
+			{
+                if (collection.Length == 0)
+                {
+                    item = default;
+					return false;
+                }
+                item = collection[0];
+                collection.RemoveAt(0);
+				return true;
+			}
+
+			private void PlantAuto(Allocator allocator)
             {
-                using var heQueue = new NativeQueue<int>(allocator);
+                using var heQueue = new NativeList<int>(allocator);
                 using var loop = new NativeList<int>(allocator);
                 var heVisited = new NativeArray<bool>(halfedges.Length, allocator);
 
-                // Build boundary loop: 1st sweep
-                for (int he = 0; he < halfedges.Length; he++)
+				// Build boundary loop: 1st sweep
+				for (int he = 0; he < halfedges.Length; he++)
                 {
                     if (halfedges[he] != -1 || heVisited[he])
                     {
@@ -2734,21 +2751,21 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         var h2 = NextHalfedge(he);
                         if (halfedges[h2] != -1 && !heVisited[h2])
                         {
-                            heQueue.Enqueue(h2);
+							Enqueue(heQueue, h2);
                             heVisited[h2] = true;
                         }
 
                         var h3 = NextHalfedge(h2);
                         if (halfedges[h3] != -1 && !heVisited[h3])
                         {
-                            heQueue.Enqueue(h3);
+							Enqueue(heQueue, h3);
                             heVisited[h3] = true;
                         }
                     }
                 }
 
                 // Build boundary loop: 2nd sweep
-                while (heQueue.TryDequeue(out var he))
+                while (TryDequeue(heQueue, out var he))
                 {
                     var ohe = halfedges[he]; // valid `ohe` should always exist, -1 are eliminated in the 1st sweep!
                     if (constrainedHalfedges[ohe] && !HalfedgeIsIgnored(ohe))
@@ -2761,14 +2778,14 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         ohe = NextHalfedge(ohe);
                         if (!heVisited[ohe])
                         {
-                            heQueue.Enqueue(ohe);
+							Enqueue(heQueue, ohe);
                             heVisited[ohe] = true;
                         }
 
                         ohe = NextHalfedge(ohe);
                         if (!heVisited[ohe])
                         {
-                            heQueue.Enqueue(ohe);
+							Enqueue(heQueue, ohe);
                             heVisited[ohe] = true;
                         }
                     }
@@ -2780,18 +2797,18 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     var h2 = NextHalfedge(h1);
                     if (!heVisited[h2])
                     {
-                        heQueue.Enqueue(h2);
+						Enqueue(heQueue, h2);
                         heVisited[h2] = true;
                     }
 
                     var h3 = NextHalfedge(h2);
                     if (!heVisited[h3])
                     {
-                        heQueue.Enqueue(h3);
+						Enqueue(heQueue, h3);
                         heVisited[h3] = true;
                     }
                 }
-                while (heQueue.TryDequeue(out var he))
+                while (TryDequeue(heQueue, out var he))
                 {
                     var ohe = halfedges[he];
                     if (constrainedHalfedges[ohe] && !HalfedgeIsIgnored(ohe))
@@ -2804,14 +2821,14 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                         ohe = NextHalfedge(ohe);
                         if (!heVisited[ohe])
                         {
-                            heQueue.Enqueue(ohe);
+							Enqueue(heQueue, ohe);
                             heVisited[ohe] = true;
                         }
 
                         ohe = NextHalfedge(ohe);
                         if (!heVisited[ohe])
                         {
-                            heQueue.Enqueue(ohe);
+							Enqueue(heQueue, ohe);
                             heVisited[ohe] = true;
                         }
                     }
@@ -2888,12 +2905,12 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 }
 
                 using var _circles = circles = new(allocator) { Length = triangles.Length / 3 };
-                using var trianglesQueue = new NativeQueue<int>(allocator);
+                using var trianglesQueue = new NativeList<int>(allocator);
                 using var pathPoints = new NativeList<int>(allocator);
                 using var pathHalfedges = new NativeList<int>(allocator);
                 using var visitedTriangles = new NativeList<bool>(triangles.Length / 3, allocator);
 
-                using var heQueue = new NativeList<int>(triangles.Length, allocator);
+				using var heQueue = new NativeList<int>(triangles.Length, allocator);
                 using var tQueue = new NativeList<int>(triangles.Length, allocator);
 
                 for (int tId = 0; tId < triangles.Length / 3; tId++)
@@ -3149,7 +3166,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                 public OutputData<T2> Output;
                 public NativeList<Circle> Circles;
 
-                public NativeQueue<int> TrianglesQueue;
+                public NativeList<int> TrianglesQueue;
                 public NativeList<int> PathPoints;
                 public NativeList<int> PathHalfedges;
                 public NativeList<bool> VisitedTriangles;
@@ -3197,15 +3214,33 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                     return PathPoints.Length;
                 }
 
-                private void RecalculateBadTriangles(T2 p, int initTriangle)
+
+				private static void Enqueue<Ti>(NativeList<Ti> collection, Ti item) where Ti : unmanaged
+				{
+					collection.Add(item);
+				}
+
+				private static bool TryDequeue<Ti>(NativeList<Ti> collection, out Ti item) where Ti : unmanaged
+				{
+					if (collection.Length == 0)
+					{
+						item = default;
+						return false;
+					}
+					item = collection[0];
+					collection.RemoveAt(0);
+					return true;
+				}
+
+				private void RecalculateBadTriangles(T2 p, int initTriangle)
                 {
                     var triangles = Output.Triangles;
                     heLoopId = -1;
-                    TrianglesQueue.Enqueue(initTriangle);
+					Enqueue(TrianglesQueue, initTriangle);
                     VisitedTriangles[initTriangle] = true;
                     tIdMinVisited = initTriangle;
 
-                    while (TrianglesQueue.TryDequeue(out var tId))
+                    while (TryDequeue(TrianglesQueue, out var tId))
                     {
                         for (int i = 0; i < 3; i++)
                         {
@@ -3226,7 +3261,7 @@ namespace andywiecko.BurstTriangulator.LowLevel.Unsafe
                             var circle = Circles.IsCreated ? Circles[otherId] : new(CalculateCircumCircle(triangles[3 * otherId + 0], triangles[3 * otherId + 1], triangles[3 * otherId + 2], Output.Positions.AsArray()));
                             if (utils.le(utils.Cast(utils.distancesq(circle.Center, p)), circle.RadiusSq))
                             {
-                                TrianglesQueue.Enqueue(otherId);
+								Enqueue(TrianglesQueue, otherId);
                                 VisitedTriangles[otherId] = true;
                                 tIdMinVisited = math.min(tIdMinVisited, otherId);
                             }
