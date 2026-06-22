@@ -14,7 +14,7 @@ namespace andywiecko.BurstTriangulator.Tests.Runtime
         public IEnumerator DemoTest()
         {
             yield return EditorSceneManager.LoadSceneAsyncInPlayMode(path: "Packages/com.andywiecko.burst.triangulator/Tests/Runtime/RetriangulateDemoTest.unity", new(LoadSceneMode.Single));
-            var demo = Object.FindAnyObjectByType<RetriangulateDemo>();
+            var demo = UnityEngine.Object.FindAnyObjectByType<RetriangulateDemo>();
 
             foreach (RetriangulateDemo.Cases c in Enum.GetValues(typeof(RetriangulateDemo.Cases)))
             {
