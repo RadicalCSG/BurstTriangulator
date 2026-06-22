@@ -492,7 +492,7 @@ namespace andywiecko.BurstTriangulator
     /// <seealso cref="Extensions.AsNativeArray{T}(T[], out Handle)"/>
     public readonly struct Handle
     {
-        private readonly ulong gcHandle;
+        private readonly System.Runtime.InteropServices.GCHandle gcHandle;
         /// <summary>
         /// Creates a <see cref="Handle"/>.
         /// </summary>
@@ -501,11 +501,11 @@ namespace andywiecko.BurstTriangulator
         /// <see cref="UnsafeUtility.PinGCObjectAndGetAddress(object, out ulong)"/>.
         /// </param>
         /// <seealso cref="Extensions.AsNativeArray{T}(T[], out Handle)"/>
-        public Handle(ulong gcHandle) => this.gcHandle = gcHandle;
+        public Handle(System.Runtime.InteropServices.GCHandle gcHandle) => this.gcHandle = gcHandle;
         /// <summary>
         /// Releases the handle, allowing the object to be collected by the garbage collector.
         /// </summary>
-        public readonly void Free() => UnsafeUtility.ReleaseGCObject(gcHandle);
+        public readonly void Free() => gcHandle.Free();
     }
 
     /// <summary>
@@ -761,7 +761,8 @@ namespace andywiecko.BurstTriangulator
         /// <returns><see cref="NativeArray{T}"/> view on managed <paramref name="array"/> with <see cref="NativeArray{T}"/>.</returns>
         public static unsafe NativeArray<T> AsNativeArray<T>(this T[] array, out Handle handle) where T : unmanaged
         {
-            var ptr = UnsafeUtility.PinGCArrayAndGetDataAddress(array, out var gcHandle);
+            var gcHandle = System.Runtime.InteropServices.GCHandle.Alloc(array, System.Runtime.InteropServices.GCHandleType.Pinned);
+            var ptr = (void*)gcHandle.AddrOfPinnedObject();
             var ret = NativeArrayUnsafeUtility.ConvertExistingDataToNativeArray<T>(ptr, array.Length, Allocator.None);
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             var m_SafetyHandle = AtomicSafetyHandle.Create();

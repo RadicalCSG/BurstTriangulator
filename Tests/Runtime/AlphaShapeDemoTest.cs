@@ -1,8 +1,9 @@
 using System.Collections;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
+#if UNITY_EDITOR
+using UnityEditor.SceneManagement;
 
 namespace andywiecko.BurstTriangulator.Tests.Runtime
 {
@@ -12,7 +13,7 @@ namespace andywiecko.BurstTriangulator.Tests.Runtime
         public IEnumerator ProceduralDemoTest()
         {
             yield return EditorSceneManager.LoadSceneAsyncInPlayMode(path: "Packages/com.andywiecko.burst.triangulator/Tests/Runtime/AlphaShapeDemo.unity", new(LoadSceneMode.Single));
-            var demo = Object.FindObjectOfType<AlphaShapeProceduralDemo>(includeInactive: true);
+            var demo = Object.FindAnyObjectByType<AlphaShapeProceduralDemo>(FindObjectsInactive.Include);
             demo.gameObject.SetActive(true);
 
             for (int i = 0; i < 100; i++) yield return next();
@@ -29,7 +30,7 @@ namespace andywiecko.BurstTriangulator.Tests.Runtime
         public IEnumerator ReconstructionDemoTest()
         {
             yield return EditorSceneManager.LoadSceneAsyncInPlayMode(path: "Packages/com.andywiecko.burst.triangulator/Tests/Runtime/AlphaShapeDemo.unity", new(LoadSceneMode.Single));
-            var demo = Object.FindObjectOfType<AlphaShapeReconstructionDemo>(includeInactive: true);
+            var demo = Object.FindAnyObjectByType<AlphaShapeReconstructionDemo>(FindObjectsInactive.Include);
             demo.gameObject.SetActive(true);
 
             yield return new WaitForSeconds(1f);
@@ -49,3 +50,4 @@ namespace andywiecko.BurstTriangulator.Tests.Runtime
         }
     }
 }
+#endif

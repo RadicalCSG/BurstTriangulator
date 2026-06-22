@@ -1,9 +1,10 @@
 using System;
 using System.Collections;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
+#if UNITY_EDITOR
+using UnityEditor.SceneManagement;
 
 namespace andywiecko.BurstTriangulator.Tests.Runtime
 {
@@ -13,7 +14,7 @@ namespace andywiecko.BurstTriangulator.Tests.Runtime
         public IEnumerator DemoTest()
         {
             yield return EditorSceneManager.LoadSceneAsyncInPlayMode(path: "Packages/com.andywiecko.burst.triangulator/Tests/Runtime/RetriangulateDemoTest.unity", new(LoadSceneMode.Single));
-            var demo = GameObject.FindObjectOfType<RetriangulateDemo>();
+            var demo = Object.FindAnyObjectByType<RetriangulateDemo>();
 
             foreach (RetriangulateDemo.Cases c in Enum.GetValues(typeof(RetriangulateDemo.Cases)))
             {
@@ -24,3 +25,4 @@ namespace andywiecko.BurstTriangulator.Tests.Runtime
         }
     }
 }
+#endif

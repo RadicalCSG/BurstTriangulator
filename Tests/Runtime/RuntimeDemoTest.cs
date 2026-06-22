@@ -1,8 +1,9 @@
 using System.Collections;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
+#if UNITY_EDITOR
+using UnityEditor.SceneManagement;
 
 namespace andywiecko.BurstTriangulator.Tests.Runtime
 {
@@ -16,3 +17,4 @@ namespace andywiecko.BurstTriangulator.Tests.Runtime
         }
     }
 }
+#endif
