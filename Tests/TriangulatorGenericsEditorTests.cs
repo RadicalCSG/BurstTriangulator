@@ -1539,7 +1539,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             using var constraintEdges = new NativeArray<int>(LakeSuperior.Constraints, Allocator.Persistent);
             using var holes = new NativeArray<T>(scaledHoles.DynamicCast<T>(), Allocator.Persistent);
 
-            using var triangulator = new Triangulator<T>(1024 * 1024, Allocator.Persistent)
+            using var triangulator = new Triangulator<T>(Allocator.Persistent)
             {
                 Input = {
                     Positions = positions,
@@ -2303,7 +2303,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 .Range(0, n)
                 .SelectMany(i => new[] { i, (i + 1) % n })
                 .ToArray(), Allocator.Persistent);
-            using var triangulator = new Triangulator<T>(1024 * 1024, Allocator.Persistent)
+            using var triangulator = new Triangulator<T>(Allocator.Persistent)
             {
                 Settings =
                 {
@@ -2347,7 +2347,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 1, 2,
                 2, 0,
             }, Allocator.Persistent);
-            using var triangulator = new Triangulator<T>(1024 * 1024, Allocator.Persistent)
+            using var triangulator = new Triangulator<T>(Allocator.Persistent)
             {
                 Settings =
                 {
@@ -2388,7 +2388,7 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
                 3, 0,
                 0, 2,
             }, Allocator.Persistent);
-            using var triangulator = new Triangulator<T>(1024 * 1024, Allocator.Persistent)
+            using var triangulator = new Triangulator<T>(Allocator.Persistent)
             {
                 Settings =
                 {
