@@ -68,8 +68,11 @@ namespace andywiecko.BurstTriangulator.Editor.Tests
             }
 
             Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+            // Under Temp/, not the working directory. The working directory of the editor is the PROJECT ROOT, so
+            // this wrote 18 files and 5.6 MB of TikZ there, which then showed up as untracked in every git status
+            // anyone ran for the next six days. Temp/ is already ignored and Unity wipes it.
             triangulator.LaTeXify(
-                path: $"lake-superior-area{area}-angle{math.degrees(angle)}.tex",
+                path: $"Temp/lake-superior-area{area}-angle{math.degrees(angle)}.tex",
                 appendTikz: @$"
 \node[right] at (0.1, -0.30) {{$C_\theta= {math.round(math.degrees(angle))}^\circ$}};
 \node[right] at (0.1, -0.35) {{$C_\triangle=10^{{{math.round(math.log10(area))}}}$}};",
